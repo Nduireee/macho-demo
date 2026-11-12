@@ -469,8 +469,59 @@ body.no-bar .foot{display:none}
 .codein{font-size:1.8rem !important;letter-spacing:.4em;text-align:center;max-width:260px}
 .code{font-size:1.25rem;letter-spacing:.15em}
 .linkbox{width:100%;margin-top:6px;font-size:.85rem !important;min-height:38px !important;padding:6px 8px !important;color:var(--muted) !important}
+.linkbox{min-width:min(520px,62vw)}
+.tabs{overflow-x:auto;scrollbar-width:none}
+.tabs button{white-space:nowrap;padding:12px 12px}
+.pipe{list-style:none;margin:12px 0 8px;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.pipe li{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-size:.78rem;color:var(--muted);position:relative}
+.pipe li::before{content:"";position:absolute;top:13px;left:-50%;width:100%;height:3px;background:var(--line-soft);z-index:0}
+.pipe li:first-child::before{display:none}
+.pipe li.done::before,.pipe li.now::before{background:var(--ok)}
+.pd{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--surface);font-weight:700;font-size:.8rem}
+.pipe li.done,.pipe li.now{color:var(--ink);font-weight:700}
+.pipe li.done .pd,.pp-steps li.done .pd{background:var(--ok);border-color:var(--ok);color:#fff}
+.pipe li.now .pd,.pp-steps li.now .pd{background:var(--sign);border-color:var(--sign);color:#16212B}
+.pipe li.bad .pd{background:var(--bad);border-color:var(--bad);color:#fff}
+.pipe li.bad{color:var(--bad)}
+.pp-head{display:flex;gap:12px;align-items:center}
+.pp-ic{flex:none;width:44px;height:44px;border-radius:8px;background:var(--sign);color:#16212B;display:grid;place-items:center}
+.pp-steps{list-style:none;margin:6px 0 0;padding:0}
+.pp-steps li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1.5px solid var(--line-soft)}
+.pp-steps li:first-child{border-top:0}
+.fb{background:var(--bg);border-radius:6px;padding:10px 12px;margin:8px 0}
+.fb-item{padding:6px 0;border-top:1.5px solid var(--line-soft)}
+.fb-item:first-of-type{border-top:0}
+.fb-item.returned p{color:var(--bad)}
+.qual{margin-top:8px}
+.qual .chip-static{font-size:.82rem;padding:3px 10px;display:inline-flex;gap:4px;align-items:center}
+.qual .ok{border-color:var(--ok);color:var(--ok)}
+.qual .no{border-color:var(--bad);color:var(--bad)}
+.paid{color:var(--ok);font-weight:700}
+.estats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.estats .stat strong{font-size:1.35rem}
+@media (max-width:420px){.estats .stat strong{font-size:1.1rem}}
+
+/* All four tabs always visible, even on small phones */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;overflow:visible}
+.tabs button{white-space:normal;padding:10px 4px;font-size:1rem;justify-content:center;text-align:center;min-height:56px;flex-wrap:wrap;gap:4px}
+@media (max-width:360px){.tabs{grid-template-columns:repeat(2,1fr)}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:20px}
+.kpi{font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:2px solid var(--line-soft);border-radius:8px;padding:14px 16px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.kpi strong{font-family:var(--head);font-size:2.2rem;line-height:1}
+.kpi span{font-size:.88rem;color:var(--muted)}
+.kpi.hot{border-color:var(--sign);border-width:3px}
+.kpi.on{background:var(--bg);border-color:var(--ink)}
+.review-detail{max-width:900px}
+.tablewrap{overflow-x:auto}
+.ptable{width:100%;border-collapse:collapse;font-size:.95rem}
+.ptable th{text-align:left;font-size:.82rem;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:2px solid var(--line-soft);white-space:nowrap}
+.ptable td{padding:10px;border-bottom:1.5px solid var(--line-soft);vertical-align:middle;font-variant-numeric:tabular-nums}
+.ptable td.warn{color:var(--bad);font-weight:700}
 
 .linkbox{min-width:min(520px,62vw)}
+.sync{font-weight:700;padding:2px 10px;border-radius:12px;background:rgba(255,255,255,.12)}
+.sync.live{background:#1C7343;color:#fff}
+.sync.err{background:#B42318;color:#fff}
 </style>
 </head>
 <body>
@@ -533,6 +584,9 @@ const ICONS = {
   phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
   chat:'<path d="M4 4h16v12H8l-4 4z"/>',
   mail:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="m3 7 9 6 9-6"/>',
+  star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+  wallet:'<rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20M16 15h2"/><path d="M5 6V4h12v2"/>',
+  folder:'<path d="M3 6h6l2 2h10v11H3z"/>',
   star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
   key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>',
   land:'<path d="M3 20h18"/><path d="M5 20V9l3-2 3 2v11"/><path d="M14 20v-5h5v5"/><path d="M3 5h4"/>',
@@ -805,7 +859,7 @@ function pastVisit(pid, id, mi, vid, date, fails, summary, resolved, extra){
   return Object.assign({ id, projectId:pid, milestoneId:m.id, type:"onsite", verifierId:vid, scheduled:`${date}, 09:30`, status:"approved", checkedInAt:`${date}, 09:34`,
     checklist, reasons, other, photos, issuePhotos, progress:100, summary, resolved:resolved || "", reviewer:REVIEWER, reviewedAt:date, reviewNote:"", submittedAt:date }, extra || {});
 }
-function seed(){
+function seedBase(){
   return {
     projects:[
       { id:"p1", directions:"From Kitengela town take Namanga Road 3 km, turn left at the Total station. Blue gate, third plot on the right.", gate:"Mzee Kioko, the caretaker", name:"4-bedroom bungalow", town:"Kitengela", county:"Kajiado County", plot:"Kajiado/Kitengela/12345", contractor:"Mutua & Sons Builders", nca:"NCA 6",
@@ -871,13 +925,45 @@ function seed(){
   };
 }
 
+const PRO_SHARE = 0.8;
+const PAY_DAY = "Friday";
+function addDays(dateStr, n){ const d = new Date(Date.parse(String(dateStr).split(",")[0])); if(isNaN(d)) return dateStr; d.setDate(d.getDate() + n); return d.toLocaleDateString("en-GB", {day:"numeric", month:"short", year:"numeric"}); }
+function nextPayDay(){ const d = new Date(); const add = (5 - d.getDay() + 7) % 7 || 7; d.setDate(d.getDate() + add); return d.toLocaleDateString("en-GB", {weekday:"short", day:"numeric", month:"short", year:"numeric"}); }
+function payRef(id){ let h = 2166136261; for(const ch of id){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } const a = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789"; let r = "S"; for(let i = 0; i < 9; i++){ h = (Math.imul(h, 1103515245) + 12345) >>> 0; r += a[(h >>> 8) % a.length]; } return r; }
+function ensureVisitRecord(v){
+  if(v.status !== "approved") return v;
+  if(!v.history) v.history = [{ at:v.reviewedAt, by:v.reviewer || REVIEWER, outcome:"approved", note:v.reviewNote || "" }];
+  if(!v.quality) v.quality = { photos:true, notes:true, time:true, checklist:true };
+  if(!v.payout) v.payout = String(v.reviewedAt).startsWith("10 Nov 2026") ? { status:"processing", due:"Fri 13 Nov 2026" } : { status:"paid", on:addDays(v.reviewedAt, 3), ref:payRef(v.id), method:"M-Pesa" };
+  return v;
+}
+function seed(){
+  const st = seedBase();
+  st.visits.forEach(ensureVisitRecord);
+  const v3 = st.visits.find(v => v.id === "visit-3");
+  if(v3){ v3.history = [{ at:"14 Oct 2026, 15:10", by:REVIEWER, outcome:"returned", note:"Photo 2 is blurred and the mesh height above the membrane isn’t visible. Please add a close-up with a tape measure." },
+                        { at:"14 Oct 2026, 17:40", by:REVIEWER, outcome:"approved", note:"Good catch on the beam steel. Clear photos now." }];
+    v3.quality = { photos:false, notes:true, time:true, checklist:true }; }
+  /* Something on the review desk from the start: one report waiting, one sent back */
+  st.visits.push(pastVisit("p1","visit-60",3,"v7","11 Nov 2026",{d6:{na:true},d7:{na:true}},"Walls about chest height on three sides. The back wall is lower because the stone delivery was late.","",
+    {type:"video", progress:60, status:"submitted", reviewedAt:null, reviewer:null, submittedAt:"11 Nov 2026, 17:20", checkedInAt:"11 Nov 2026, 16:40"}));
+  st.visits.push(pastVisit("p6","visit-61","h1","v10","11 Nov 2026",{ha5:{r:["No completion date"], o:"The draft agreement has no completion date or penalty for delay."}},"Title and approvals are in order. The sale agreement needs a completion date before you sign.","",
+    {status:"returned", reviewedAt:"11 Nov 2026, 12:05", reviewer:REVIEWER, submittedAt:"11 Nov 2026, 10:30", reviewNote:"Photo 4 (the draft agreement) is too dark to read. Please retake it in daylight and add the page with the payment terms.",
+     history:[{ at:"11 Nov 2026, 12:05", by:REVIEWER, outcome:"returned", note:"Photo 4 (the draft agreement) is too dark to read. Please retake it in daylight and add the page with the payment terms." }]}));
+  return st;
+}
+const feeOf = v => v.fee || (v.type === "onsite" ? VERIFIERS[v.verifierId].fee : VERIFIERS[v.verifierId].video);
+const netOf = v => Math.round(feeOf(v) * PRO_SHARE);
+const QUAL = [["photos","Clear photos"],["notes","Complete notes"],["time","On time"],["checklist","Followed the checklist"]];
+const qualScore = v => v.quality ? QUAL.filter(([k]) => v.quality[k]).length : null;
+
 /* ---------- State ---------- */
 const QS = (() => { try{ return new URLSearchParams(location.search); }catch(e){ return new URLSearchParams(""); } })();
 const ROOM0 = QS.get("room") || ((typeof window !== "undefined" && window.MACHO_CONFIG && window.MACHO_CONFIG.room) || "demo");
 /* Demo mode shows the blue prototype bar and lets you switch sides freely.
    On: inside Claude, with ?demo=1 in the link, or demoMode:true in MACHO_CONFIG. Off: people must sign in, and see only their own side. */
 const DEMO = !!((typeof window !== "undefined" && window.claude) || QS.get("demo") === "1" || QS.get("room") || (window.MACHO_CONFIG && window.MACHO_CONFIG.demoMode));
-const KEY = "macho-demo-v10" + (ROOM0 === "demo" ? "" : ":" + ROOM0);
+const KEY = "macho-demo-v11" + (ROOM0 === "demo" ? "" : ":" + ROOM0);
 const SESSKEY = "macho-session" + (ROOM0 === "demo" ? "" : ":" + ROOM0);
 let SESSION = (() => { try{ return JSON.parse(localStorage.getItem(SESSKEY)) || null; }catch(e){ return null; } })();
 function saveSession(){ try{ if(SESSION) localStorage.setItem(SESSKEY, JSON.stringify(SESSION)); else localStorage.removeItem(SESSKEY); }catch(e){} }
@@ -953,6 +1039,13 @@ async function pushNow(){
   }
   SYNC.version = next; if(SYNC.state !== "live") setSync("live");
 }
+/* Without a shared database, two tabs in the same browser still keep each other up to date. */
+window.addEventListener("storage", e => {
+  if(SYNC.on || e.key !== KEY || !e.newValue) return;
+  try{ S = JSON.parse(e.newValue); }catch(err){ return; }
+  const typing = document.activeElement && /^(TEXTAREA|INPUT|SELECT)$/.test(document.activeElement.tagName);
+  if(typing) SYNC.pendingRemote = true; else keepScroll(render);
+});
 document.addEventListener("focusout", () => { setTimeout(() => { if(SYNC.pendingRemote && !(document.activeElement && /^(TEXTAREA|INPUT|SELECT)$/.test(document.activeElement.tagName))){ SYNC.pendingRemote = false; keepScroll(render); } }, 0); });
 
 /* ---------- Helpers ---------- */
@@ -1834,12 +1927,100 @@ function jobsHTML(){
       <p class="small">You take jobs for: ${me.services.map(k => ({build:"building projects", land:"land purchases", home:"house and flat purchases"})[k]).join(", ")}.</p>
       <p class="small" style="margin-top:8px"><strong>Everyone on Macho</strong></p>
       <ul class="plain small">${Object.entries(ROLE_INFO).map(([r, i]) => `<li><strong>${r}:</strong> ${i.does}</li>`).join("")}</ul></details>
-    <div class="tabs" role="tablist">${t("requests", "Requests", inbox.length)}${t("visits", "My visits", active.length)}</div>
-    ${tab === "requests" ? `
+    <div class="tabs" role="tablist">${t("requests", "Requests", inbox.length)}${t("visits", "To do", active.length)}${t("projects", "Projects", 0)}${t("earnings", "Earnings", 0)}</div>
+    ${tab === "projects" ? proProjectsHTML() : tab === "earnings" ? proEarningsHTML() : tab === "requests" ? `
       ${inbox.length ? inbox.map(reqCard).join("") : `<div class="block"><p class="empty-msg">No new requests. When a client picks you from the Find a professional page, the request arrives here.</p></div>`}
       ${past.length ? `<h2 class="sub-h">Answered</h2><div class="block"><ul class="rows">${past.map(pastRow).join("")}</ul></div>` : ""}`
     : `${active.length ? active.map(card).join("") : `<div class="block"><p class="empty-msg">No visits booked. Accepted requests and visits Macho assigns to you appear here.</p></div>`}
       ${sent.length ? `<h2 class="sub-h">Sent for review</h2>${sent.map(card).join("")}` : ""}`}`;
+}
+const PIPE = ["Booked","On site","In review","Approved","Paid"];
+function pipeline(v){
+  ensureVisitRecord(v);
+  let k = { assigned:0, inprogress:1, returned:1, submitted:2, approved:3 }[v.status];
+  if(v.status === "approved" && v.payout && v.payout.status === "paid") k = 4;
+  const sentBack = (v.history || []).some(h => h.outcome === "returned");
+  return `<ol class="pipe" aria-label="Progress of this job">${PIPE.map((t, i) => {
+    const cls = i < k || (i === 4 && k === 4) ? "done" : i === k ? "now" : "";
+    const lab = i === 2 && v.status === "returned" ? "Sent back" : i === 2 && sentBack && i < k ? "Fixed after review" : t;
+    return `<li class="${cls} ${i === 2 && v.status === "returned" ? "bad" : ""}"><span class="pd">${cls === "done" ? ic("check",14) : i + 1}</span><span>${lab}</span></li>`; }).join("")}</ol>`;
+}
+function payLine(v){
+  ensureVisitRecord(v);
+  if(v.status !== "approved") return `<p class="small muted">${ic("wallet",16)} ${money(netOf(v))} once the review desk approves your report.</p>`;
+  return v.payout.status === "paid" ? `<p class="small paid">${ic("check",16)} ${money(netOf(v))} paid ${esc(v.payout.on)} by ${v.payout.method}, ref. ${v.payout.ref}</p>`
+    : `<p class="small">${ic("clock",16)} ${money(netOf(v))} approved, being paid on ${esc(v.payout.due)}</p>`;
+}
+function feedbackHTML(v){
+  const h = (v.history || []).slice().reverse();
+  if(!h.length) return v.status === "submitted" ? `<p class="small muted">${ic("shield",16)} With the review desk. Most reports are checked within a day.</p>` : "";
+  const q = v.quality ? `<div class="chips qual">${QUAL.map(([k, t]) => `<span class="chip-static ${v.quality[k] ? "ok" : "no"}">${v.quality[k] ? ic("check",14) : ic("cross",14)} ${t}</span>`).join("")}</div>` : "";
+  return `<div class="fb"><p class="small"><strong>${ic("shield",16)} Review desk feedback</strong></p>${h.map(x => `<div class="fb-item ${x.outcome}">
+      <span class="pill ${x.outcome === "approved" ? "pass" : "issue"}">${x.outcome === "approved" ? "Approved" : "Sent back"}</span> <span class="tiny muted">${esc(x.at)}, ${esc(x.by)}</span>
+      ${x.note ? `<p class="small" style="margin-top:4px">${esc(x.note)}</p>` : ""}</div>`).join("")}${v.status === "approved" ? q : ""}</div>`;
+}
+function myStats(sid){
+  const mine = S.visits.filter(v => v.verifierId === sid), done = mine.filter(v => v.status === "approved").map(ensureVisitRecord);
+  const first = done.filter(v => !(v.history || []).some(h => h.outcome === "returned")).length;
+  const q = done.filter(v => v.quality).map(qualScore);
+  const month = new Date().toLocaleDateString("en-GB", {month:"short", year:"numeric"});
+  const paidMonth = done.filter(v => v.payout.status === "paid" && String(v.payout.on).endsWith(month)).reduce((a, v) => a + netOf(v), 0);
+  const waiting = done.filter(v => v.payout.status === "processing").reduce((a, v) => a + netOf(v), 0);
+  const total = done.filter(v => v.payout.status === "paid").reduce((a, v) => a + netOf(v), 0);
+  return { done:done.length, firstPct:done.length ? Math.round(100 * first / done.length) : null, qual:q.length ? (q.reduce((a, b) => a + b, 0) / q.length).toFixed(1) : null, paidMonth, waiting, total, month };
+}
+function proProjectsHTML(){
+  const sid = ui.signedIn, mine = S.visits.filter(v => v.verifierId === sid);
+  const pids = [...new Set(mine.map(v => v.projectId))].filter(id => pById(id));
+  if(ui.vProj && pids.includes(ui.vProj)) return proProjectDetail(pById(ui.vProj));
+  if(!pids.length) return `<div class="block"><p class="empty-msg">No projects yet. Every project you visit appears here, with its progress and your reports.</p></div>`;
+  return `<p class="small muted" style="margin:12px 2px 0">Every project you’ve worked on. You see how the build or purchase is going, and your own reports, but never the client’s payments or other professionals’ reports.</p>
+    ${pids.map(id => { const p = pById(id), list = MS(p), cur = currentMilestone(p), doneN = list.filter(m => p.paid[m.id]).length, pct = Math.round(100 * doneN / list.length);
+      const vs = mine.filter(v => v.projectId === id), last = vs[vs.length - 1];
+      const statusTxt = p.closed ? "Closed" : !cur ? "Finished" : `Step ${mIdx(cur.id) + 1} of ${list.length}: ${cur.name}`;
+      return `<button class="block job-card" data-act="openProProj" data-pid="${id}">
+        <div class="pp-head"><span class="pp-ic">${ic(TYPES[ptype(p)].icon,22)}</span><div><strong>${esc(p.name)}</strong><div class="small muted">${esc(p.town)}, ${esc(p.county)}. Client: ${OWNER.first}</div></div></div>
+        <p class="small" style="margin-top:8px"><strong>${statusTxt}</strong></p>
+        <div class="bar" style="margin-top:6px"><span style="width:${pct}%"></span></div>
+        <p class="small muted" style="margin-top:6px">${vs.length} ${vs.length > 1 ? "visits" : "visit"} by you. Latest: ${mById(last.milestoneId).name}, ${PIPE[{ assigned:0, inprogress:1, returned:1, submitted:2, approved:3 }[last.status] + (last.status === "approved" && ensureVisitRecord(last).payout.status === "paid" ? 1 : 0)].toLowerCase()}${last.status === "returned" ? " (sent back)" : ""}.</p></button>`; }).join("")}`;
+}
+function proProjectDetail(p){
+  const sid = ui.signedIn, mine = S.visits.filter(v => v.verifierId === sid && v.projectId === p.id), list = MS(p), cur = currentMilestone(p);
+  return `<button class="back" data-act="closeProProj" style="margin-top:12px">${ic("back",20)} All projects</button>
+    <div class="block"><div class="pp-head"><span class="pp-ic">${ic(TYPES[ptype(p)].icon,22)}</span><div><h2 style="margin:0">${esc(p.name)}</h2><div class="small muted">${esc(p.plot)}, ${esc(p.town)}. ${TYPES[ptype(p)].label}. Client: ${OWNER.first}.</div></div></div>
+      <h3 class="modal-sub" style="font-size:1.15rem">Progress</h3>
+      <ol class="pp-steps">${list.map((m, i) => { const st = mStatus(p, m.id), mineHere = mine.filter(v => v.milestoneId === m.id);
+        const cls = st === "released" ? "done" : cur && cur.id === m.id ? "now" : "";
+        return `<li class="${cls}"><span class="pd">${cls === "done" ? ic("check",14) : i + 1}</span><span><strong>${m.name}</strong>${mineHere.length ? ` <span class="pill">You checked this</span>` : ""}<span class="small muted" style="display:block">${st === "released" ? "Done" : cls === "now" ? STATUS[st] : "Not started"}</span></span></li>`; }).join("")}</ol></div>
+    <h2 class="sub-h">Your work on this project</h2>
+    ${mine.slice().reverse().map(v => { const m = mById(v.milestoneId), b = v.status === "approved" ? band(v) : null;
+      return `<div class="block"><div class="req-head"><strong>${m.name}${v.type === "video" ? " (video)" : ""}</strong><span class="small muted">${esc(v.scheduled)}</span></div>
+        ${pipeline(v)}
+        ${b ? `<p class="small">Your report scored <strong>${scoreOf(v)} out of 100</strong> (${b.t.toLowerCase()}).</p>` : ""}
+        ${feedbackHTML(v)}${payLine(v)}
+        ${["assigned","inprogress","returned"].includes(v.status) ? `<div class="btn-row"><button class="btn sign small-btn" data-act="openJob" data-vid="${v.id}">${v.status === "returned" ? "Fix and resend" : "Open this visit"}</button></div>` : ""}</div>`; }).join("")}`;
+}
+function proEarningsHTML(){
+  const sid = ui.signedIn, st = myStats(sid), me = VERIFIERS[sid];
+  const when = v => Date.parse(String(v.payout.status === "paid" ? v.payout.on : v.reviewedAt).split(",")[0]) || 0;
+  const done = S.visits.filter(v => v.verifierId === sid && v.status === "approved").map(ensureVisitRecord).sort((a, b) => (b.payout.status === "processing") - (a.payout.status === "processing") || when(b) - when(a));
+  const pending = S.visits.filter(v => v.verifierId === sid && ["submitted","returned"].includes(v.status));
+  return `<div class="estats">
+      <div class="stat"><strong>${money(st.paidMonth)}</strong><span>paid in ${st.month}</span></div>
+      <div class="stat"><strong>${money(st.waiting)}</strong><span>approved, paid ${nextPayDay()}</span></div>
+      <div class="stat"><strong>${money(st.total)}</strong><span>paid since you joined</span></div></div>
+    <div class="estats" style="margin-top:10px">
+      <div class="stat"><strong>${st.firstPct == null ? "–" : st.firstPct + "%"}</strong><span>reports approved first time</span></div>
+      <div class="stat"><strong>${st.qual == null ? "–" : st.qual + " / 4"}</strong><span>average review rating</span></div>
+      <div class="stat"><strong>${me.rating.toFixed(1)}</strong><span>client rating, ${me.reviews} reviews</span></div></div>
+    <div class="callout small">${ic("wallet",22)}<p>You receive ${Math.round(PRO_SHARE * 100)}% of each fee. Fees are paid every ${PAY_DAY} by M-Pesa to your number ending ${me.phone.replace(/\D/g, "").slice(-3)}, for every report approved by then.</p></div>
+    ${pending.length ? `<h2 class="sub-h">Not yet approved</h2><div class="block"><ul class="rows">${pending.map(v => `<li><div class="r-main"><div><div class="r-title">${mById(v.milestoneId).name}, ${esc(pById(v.projectId).town)}</div><div class="small muted">${v.status === "returned" ? "Sent back: fix it to get paid" : "With the review desk"}</div></div></div><strong>${money(netOf(v))}</strong></li>`).join("")}</ul></div>` : ""}
+    <h2 class="sub-h">Payments</h2>
+    ${done.length ? `<div class="block"><ul class="rows">${done.map(v => `<li><div class="r-main"><div><div class="r-title">${mById(v.milestoneId).name}, ${esc(pById(v.projectId).town)}</div>
+        <div class="small muted">${v.payout.status === "paid" ? `Paid ${esc(v.payout.on)}, ${v.payout.method} ref. ${v.payout.ref}` : `Approved ${esc(String(v.reviewedAt).split(",")[0])}, paying ${esc(v.payout.due)}`}</div></div></div>
+        <span style="text-align:right"><strong>${money(netOf(v))}</strong><br><span class="pill ${v.payout.status === "paid" ? "pass" : "wait"}">${v.payout.status === "paid" ? "Paid" : "Processing"}</span></span></li>`).join("")}</ul></div>`
+      : `<div class="block"><p class="empty-msg">No payments yet. Your first fee is paid on the ${PAY_DAY} after your first report is approved.</p></div>`}
+    <div class="btn-row"><button class="btn ghost" data-act="statement">${ic("doc",20)} Download a statement</button></div>`;
 }
 function missing(v){
   const m = mById(v.milestoneId), out = [];
@@ -1917,28 +2098,80 @@ function autoChecks(v){
     [prevVerifier(v) !== v.verifierId, "Different surveyor from the previous visit"]
   ];
 }
-function viewReview(){
-  const q = S.visits.filter(v => v.status === "submitted"), done = S.visits.filter(v => v.reviewedAt).slice().reverse().slice(0, 6);
-  const row = (v, btn) => { const p = pById(v.projectId); return `<li><div class="r-main">${ic(v.type === "video" ? "video" : "clipboard",24)}<div><div class="r-title">${mById(v.milestoneId).name}</div><div class="small muted">${esc(p.town)}, ${VERIFIERS[v.verifierId].name}</div></div></div>${btn}</li>`; };
-  const v = ui.rVisit && vById(ui.rVisit);
-  let detail = `<div class="card"><p class="muted">Pick a report from the list to review it.</p></div>`;
-  if(v && v.status === "submitted"){
-    const p = pById(v.projectId);
-    detail = `<div class="card"><h2>${mById(v.milestoneId).name}</h2><p class="muted small">${esc(p.name)}, ${esc(p.town)}. Sent ${esc(v.submittedAt)}.</p>
+function reviewDetail(v){
+  const p = pById(v.projectId), m = mById(v.milestoneId), x = VERIFIERS[v.verifierId];
+  const head = `<button class="back" data-act="closeReview">${ic("back",20)} Review desk</button>`;
+  if(v.status === "submitted") return head + `<div class="review-detail">` + `<div class="card"><h2>${mById(v.milestoneId).name}</h2><p class="muted small">${esc(p.name)}, ${esc(p.town)}. Sent ${esc(v.submittedAt)}.</p>
       <h3 style="font-size:1.3rem;margin:18px 0 6px">Automatic checks</h3>
       <ul class="checks">${autoChecks(v).map(([ok, t]) => `<li><span class="tick ${ok ? "" : "no"}">${ic(ok ? "check" : "cross",16)}</span><span>${t}<span class="sr">${ok ? " (passed)" : " (failed)"}</span></span></li>`).join("")}</ul></div>
       <div class="card" style="margin-top:16px">${reportBody(v)}</div>
       <div class="card" style="margin-top:16px"><h2>Your decision</h2>
         <p class="small muted">Does each photo really show what was ticked? Is any reason vague? A note is optional when approving and required when sending back.</p>
-        <textarea rows="3" data-field="reviewNote" data-vid="${v.id}" aria-label="Review note" placeholder="Note for the surveyor or client">${esc(v.reviewNoteDraft)}</textarea>
-        <div class="btn-row"><button class="btn sign" data-act="approve" data-vid="${v.id}">${ic("check",22)} Approve and send to client</button><button class="btn danger" data-act="sendBack" data-vid="${v.id}">Send back to surveyor</button></div></div>`;
+        <p class="small" style="margin-top:10px"><strong>Rate the work</strong> (the professional sees this)</p>
+        <div class="chips pick">${QUAL.map(([k, t]) => { const on = !(ui.rq && ui.rq[k] === false); return `<button data-act="rqual" data-k="${k}" aria-pressed="${on}">${on ? ic("check",16) : ic("cross",16)} ${t}</button>`; }).join("")}</div>
+        <textarea rows="3" data-field="reviewNote" data-vid="${v.id}" aria-label="Review note" placeholder="Note for the professional or client">${esc(v.reviewNoteDraft)}</textarea>
+        <div class="btn-row"><button class="btn sign" data-act="approve" data-vid="${v.id}">${ic("check",22)} Approve and send to client</button><button class="btn danger" data-act="sendBack" data-vid="${v.id}">Send back to surveyor</button></div></div>` + `</div>`;
+  ensureVisitRecord(v);
+  return head + `<div class="review-detail"><div class="card"><h2>${m.name}${v.type === "video" ? " (video)" : ""}</h2>
+      <p class="muted small">${esc(p.name)}, ${esc(p.town)}. ${x.name}, ${x.role.toLowerCase()}.</p>
+      ${pipeline(v)}${feedbackHTML(v)}${v.status === "approved" ? payLine(v) : `<p class="small">${ic("clock",16)} Waiting for ${x.name.split(" ")[0]} to fix and resend.</p>`}</div>
+    <div class="card" style="margin-top:16px">${reportBody(v)}</div></div>`;
+}
+function viewReview(){
+  const v = ui.rVisit && vById(ui.rVisit);
+  if(v) return reviewDetail(v);
+  const T = ui.rtab || "todo", vs = S.visits.map(x => x.status === "approved" ? ensureVisitRecord(x) : x);
+  const todo = vs.filter(x => x.status === "submitted"), back = vs.filter(x => x.status === "returned"), appr = vs.filter(x => x.status === "approved");
+  const month = new Date().toLocaleDateString("en-GB", {month:"short", year:"numeric"});
+  const apprMonth = appr.filter(x => String(x.reviewedAt).includes(month));
+  const firstOK = appr.filter(x => !(x.history || []).some(h => h.outcome === "returned")).length;
+  const owed = appr.filter(x => x.payout.status === "processing");
+  const openCases = cases().filter(c => c.step < 3);
+  const kpi = (n, t, k, tone) => `<button class="kpi ${tone || ""} ${T === k ? "on" : ""}" data-act="rtab" data-v="${k}"><strong>${n}</strong><span>${t}</span></button>`;
+  const row = (x, extra) => { const p = pById(x.projectId), m = mById(x.milestoneId), pr = VERIFIERS[x.verifierId];
+    return `<li><div class="r-main">${avatar(x.verifierId, 40)}<div><div class="r-title">${m.name}${x.type === "video" ? " (video)" : ""}, ${esc(p.town)}</div>
+      <div class="small muted">${pr.name}, ${pr.role.toLowerCase()}. ${extra || ""}</div></div></div>
+      <button class="btn ${x.status === "submitted" ? "sign" : "ghost"} small-btn" data-act="openReview" data-vid="${x.id}">${x.status === "submitted" ? "Review" : "View"}</button></li>`; };
+  const when = x => esc(String(x.reviewedAt || x.submittedAt || "").split(",")[0]);
+  let list = "";
+  if(T === "todo") list = todo.length ? `<ul class="rows">${todo.map(x => row(x, `Sent ${esc(x.submittedAt)}. ${(x.history || []).some(h => h.outcome === "returned") ? "<strong>Resent after fixes.</strong>" : ""}`)).join("")}</ul>`
+    : `<p class="empty-msg">Nothing waiting. Reports arrive here when a professional sends a visit.</p>`;
+  if(T === "back") list = back.length ? `<ul class="rows">${back.map(x => row(x, `Sent back ${when(x)}: “${esc(x.reviewNote)}”`)).join("")}</ul>`
+    : `<p class="empty-msg">No reports are waiting for a professional to fix them.</p>`;
+  if(T === "done") list = appr.length ? `<ul class="rows">${appr.slice().sort((a, b) => (Date.parse(String(b.reviewedAt).split(",")[0]) || 0) - (Date.parse(String(a.reviewedAt).split(",")[0]) || 0)).map(x => row(x, `Approved ${when(x)}. Scored ${scoreOf(x)}/100. ${(x.history || []).some(h => h.outcome === "returned") ? "Sent back once." : "First time."} ${x.payout.status === "paid" ? "Paid." : "Fee to pay."}`)).join("")}</ul>`
+    : `<p class="empty-msg">Nothing approved yet.</p>`;
+  if(T === "cases") list = cases().length ? `<ul class="rows">${cases().slice().reverse().map(c => { const p = pById(c.pid), m = mById(c.mid);
+      return `<li><div class="r-main">${ic("help",24)}<div><div class="r-title">${m.name}, ${esc(p.town)} <span class="pill ${c.step < 3 ? "wait" : "pass"}">${c.step < 3 ? "Open" : "Closed"}</span></div>
+        <div class="small muted">Client disputes ${c.items.length} ${c.items.length > 1 ? "checks" : "check"}: “${esc(c.text)}”. Wants ${c.want === "visit" ? "a second visit" : "a senior review"}.</div>
+        ${c.step < 3 ? `<div class="btn-row" style="margin-top:6px"><button class="btn ghost small-btn" data-act="openReview" data-vid="${c.vid}">See the report</button><button class="btn sign small-btn" data-act="caseNext" data-cid="${c.id}">Move to next step</button></div>` : ""}</div></div></li>`; }).join("")}</ul>`
+    : `<p class="empty-msg">No disputes. When a client disagrees with a report, the case appears here.</p>`;
+  if(T === "pay") list = `${owed.length ? `<p class="small">${owed.length} approved ${owed.length > 1 ? "reports" : "report"}, ${money(owed.reduce((a, x) => a + netOf(x), 0))} to pay on ${nextPayDay()} by M-Pesa.</p>
+      <ul class="rows">${owed.map(x => `<li><div class="r-main">${avatar(x.verifierId, 40)}<div><div class="r-title">${VERIFIERS[x.verifierId].name}</div><div class="small muted">${mById(x.milestoneId).name}, ${esc(pById(x.projectId).town)}. Approved ${when(x)}.</div></div></div><strong>${money(netOf(x))}</strong></li>`).join("")}</ul>
+      <div class="btn-row"><button class="btn sign" data-act="payAll">${ic("wallet",20)} Prototype: pay them now</button></div>` : `<p class="empty-msg">Nothing to pay. Fees are paid every ${PAY_DAY} after approval.</p>`}
+    ${(() => { const paid = appr.filter(x => x.payout.status === "paid"); return paid.length ? `<p class="small muted" style="margin-top:12px">${money(paid.reduce((a, x) => a + netOf(x), 0))} paid to professionals so far.</p>` : ""; })()}`;
+  if(T === "pros"){
+    const ids = Object.keys(VERIFIERS).filter(id => vs.some(x => x.verifierId === id));
+    list = `<div class="tablewrap"><table class="ptable"><thead><tr><th>Professional</th><th>Reports approved</th><th>First time</th><th>Waiting / sent back</th><th>Average rating</th><th>Fees owed</th></tr></thead><tbody>
+      ${ids.map(id => { const st = myStats(id), mine = vs.filter(x => x.verifierId === id), x = VERIFIERS[id];
+        const flag = st.firstPct != null && st.firstPct < 80;
+        return `<tr><td><div class="r-main">${avatar(id, 32)}<div><strong>${x.name}</strong><div class="tiny muted">${x.role}</div></div></div></td><td>${st.done}</td>
+          <td class="${flag ? "warn" : ""}">${st.firstPct == null ? "–" : st.firstPct + "%"}</td><td>${mine.filter(y => y.status === "submitted").length} / ${mine.filter(y => y.status === "returned").length}</td>
+          <td>${st.qual == null ? "–" : st.qual + " / 4"}</td><td>${st.waiting ? money(st.waiting) : "–"}</td></tr>`; }).join("")}</tbody></table></div>
+      <p class="tiny muted" style="margin-top:8px">First-time approval below 80% is highlighted: a sign the professional may need coaching.</p>`;
   }
-  return `<div class="review"><section class="review-side"><h1 class="hello" style="font-size:2.4rem">Review desk</h1>
-    <p class="muted" style="margin-top:6px">A second person checks every report before the client sees it.</p><h2>Waiting (${q.length})</h2>
-    ${q.length ? `<ul class="rows">${q.map(x => row(x, `<button class="btn small-btn ${ui.rVisit === x.id ? "" : "ghost"}" data-act="openReview" data-vid="${x.id}">Review</button>`)).join("")}</ul>`
-      : `<p class="empty-msg">No reports waiting. Reports arrive here when a surveyor sends a visit for review.</p>`}
-    <h2>Recently reviewed</h2><ul class="rows">${done.map(x => row(x, `<span class="pill ${x.status === "approved" ? "pass" : "issue"}">${x.status === "approved" ? scoreOf(x) + " / 100" : "Sent back"}</span>`)).join("")}</ul>
-  </section><section>${detail}</section></div>`;
+  const tabs = [["todo","To review",todo.length],["back","Sent back",back.length],["done","Approved",appr.length],["cases","Disputes",openCases.length],["pay","Fees to pay",owed.length],["pros","Professionals",0]];
+  return `<h1 class="hello">Review desk</h1>
+    <p class="hello-sub">A second person checks every report before the client sees it.</p>
+    <div class="kpis">
+      ${kpi(todo.length, "waiting for review", "todo", todo.length ? "hot" : "")}
+      ${kpi(back.length, "sent back, waiting for the professional", "back", "")}
+      ${kpi(apprMonth.length, `approved in ${month}`, "done", "")}
+      ${kpi(appr.length ? Math.round(100 * firstOK / appr.length) + "%" : "–", "approved first time", "pros", "")}
+      ${kpi(openCases.length, "open client disputes", "cases", openCases.length ? "hot" : "")}
+      ${kpi(money(owed.reduce((a, x) => a + netOf(x), 0)), "professionals’ fees to pay", "pay", "")}
+    </div>
+    <div class="chips pick" style="margin-top:22px" role="tablist">${tabs.map(([k, t, n]) => `<button data-act="rtab" data-v="${k}" aria-pressed="${T === k}">${t}${n ? ` (${n})` : ""}</button>`).join("")}</div>
+    <section class="card" style="margin-top:14px">${list}</section>`;
 }
 
 /* ---------- Modals ---------- */
@@ -2189,7 +2422,7 @@ const actions = {
   openProject(d){ ui.page = "project"; ui.pid = d.pid; render(); window.scrollTo(0, 0); },
   shot(d){ ui.shot[d.pid] = +d.k; keepScroll(render); },
   jumpReport(d){ ui.shot[d.pid] = +d.k; render(); const r = document.getElementById("report"); if(r && r.scrollIntoView) r.scrollIntoView({behavior:"smooth", block:"start"}); },
-  role(d){ ui.forceSignIn = false; ui.si = null; ui.role = d.role; ui.modal = null; setHash();
+  role(d){ ui.forceSignIn = false; ui.si = null; ui.role = d.role; ui.modal = null; if(d.role === "verifier"){ ui.vVisit = null; ui.vProj = null; } setHash();
     if(d.role === "verifier" && !ui.vVisit){ ui.vTab = null; const r = reqs().filter(x => x.status === "pending").slice(-1)[0], a = S.visits.find(v => ["assigned","inprogress","returned"].includes(v.status)); if(r) ui.signedIn = r.sid; else if(a) ui.signedIn = a.verifierId; }
     render(); window.scrollTo(0, 0); },
   openMilestone(d){ ui.modal = {kind:"milestone", pid:d.pid, mid:d.mid}; renderModal(); },
@@ -2323,7 +2556,10 @@ const actions = {
   declineCancel(){ ui.declining = null; keepScroll(render); },
   declineWhy(d){ const r = reqs().find(x => x.id === d.rid); r.why = d.t; keepScroll(render); },
   declineReq(d){ const r = reqs().find(x => x.id === d.rid); if(!r.why) return; r.status = "declined"; ui.declining = null; post(reqThread(r), "surveyor", `Sorry ${OWNER.first}, I can’t take this one. Reason: ${r.why.toLowerCase()}.`); commit("Declined. The client will be asked to choose someone else."); },
-  vTab(d){ ui.vTab = d.t; ui.declining = null; render(); },
+  openProProj(d){ ui.vProj = d.pid; render(); window.scrollTo(0, 0); },
+  closeProProj(){ ui.vProj = null; render(); },
+  statement(){ toast("In the live app this saves a PDF statement of your fees, for KRA and your records."); },
+  vTab(d){ ui.vProj = null; ui.vTab = d.t; ui.declining = null; render(); },
   openSurveyorApp(d){ ui.role = "verifier"; setTimeout(setHash, 0); ui.signedIn = d.sid; ui.vVisit = null; ui.vTab = "requests"; ui.modal = null; render(); window.scrollTo(0, 0); },
   contact(d){ const x = VERIFIERS[d.sid]; toast(`In the live app this opens ${d.how === "call" ? "a call" : d.how} with ${x.name} through a Macho number, so both numbers stay private.`); },
   fixList(d){ ui.modal = {kind:"fix", pid:d.pid, mid:d.mid}; renderModal(); },
@@ -2347,7 +2583,7 @@ const actions = {
   close(){ ui.modal = null; renderModal(); },
   scrim(d, el, e){ if(e.target === el){ ui.modal = null; renderModal(); } },
   openJob(d){ ui.vVisit = d.vid; render(); window.scrollTo(0, 0); },
-  backJobs(){ ui.vVisit = null; render(); },
+  backJobs(){ ui.vVisit = null; render(); window.scrollTo(0, 0); },
   checkin(d){ const v = vById(d.vid); v.status = "inprogress"; v.checkedInAt = now(); const p = pById(v.projectId);
     post(v.requestId ? reqThread({id:v.requestId}) : "updates", "system", `${VERIFIERS[v.verifierId].name} checked in at ${p.town}.`); commit("Checked in."); },
   mark(d){ const v = vById(d.vid); v.checklist[d.item] = d.val; if(d.val !== "fail"){ delete v.reasons[d.item]; delete ip(v)[d.item]; } save(); keepScroll(render); },
@@ -2358,8 +2594,17 @@ const actions = {
   retake(d){ const v = vById(d.vid); delete v.photos[d.spot]; save(); keepScroll(render); },
   submit(d){ const v = vById(d.vid); if(missing(v).length) return; v.status = "submitted"; v.submittedAt = now(); ui.vVisit = null;
     post(v.requestId ? reqThread({id:v.requestId}) : "updates", "system", `${VERIFIERS[v.verifierId].name} finished the visit. The report is with our review desk.`); commit("Sent to the review desk."); window.scrollTo(0, 0); },
+  rtab(d){ ui.rtab = d.v; ui.rVisit = null; render(); },
+  closeReview(){ ui.rVisit = null; render(); window.scrollTo(0, 0); },
   openReview(d){ ui.rVisit = d.vid; render(); },
+  rqual(d){ ui.rq = ui.rq || {}; ui.rq[d.k] = ui.rq[d.k] === false; keepScroll(render); },
+  payAll(){ const due = S.visits.filter(v => v.status === "approved" && ensureVisitRecord(v).payout.status === "processing");
+    due.forEach(v => { v.payout = { status:"paid", on:today(), ref:payRef(v.id + today()), method:"M-Pesa" }; });
+    commit(due.length ? `Paid ${due.length} ${due.length > 1 ? "professionals’ fees" : "professional’s fee"} by M-Pesa.` : "Nothing waiting to be paid."); },
   approve(d){ const v = vById(d.vid); v.status = "approved"; v.reviewNote = (v.reviewNoteDraft || "").trim(); v.reviewNoteDraft = ""; v.reviewedAt = now(); v.reviewer = REVIEWER; ui.rVisit = null;
+    v.history = (v.history || []).concat([{ at:now(), by:REVIEWER, outcome:"approved", note:v.reviewNote }]);
+    v.quality = Object.fromEntries(QUAL.map(([k]) => [k, !(ui.rq && ui.rq[k] === false)])); ui.rq = null;
+    v.payout = { status:"processing", due:nextPayDay() };
     if(v.type === "onsite") ui.shot[v.projectId] = null;
     if(v.recheck){ const p = pById(v.projectId), f = fx(p).find(x => x.id === v.fixOf), old = f && vById(f.vid);
       if(f){ f.status = "done"; } if(old && band(v).k === "good") old.resolved = `Fixed by the contractor and re-checked by ${VERIFIERS[v.verifierId].name} on ${today()}.`; }
@@ -2368,7 +2613,8 @@ const actions = {
     commit("Approved. The client can now read the report."); },
   sendBack(d){ const v = vById(d.vid), note = (v.reviewNoteDraft || "").trim();
     if(!note){ toast("Add a note telling the surveyor what to fix."); return; }
-    v.status = "returned"; v.reviewNote = note; v.reviewNoteDraft = ""; v.reviewedAt = now(); ui.rVisit = null; commit("Sent back to the surveyor."); },
+    v.status = "returned"; v.reviewNote = note; v.reviewNoteDraft = ""; v.reviewedAt = now(); ui.rVisit = null; ui.rq = null;
+    v.history = (v.history || []).concat([{ at:now(), by:REVIEWER, outcome:"returned", note }]); commit("Sent back to the professional."); },
   reset(){
     if(SYNC.on && !ui.resetArmed){ ui.resetArmed = true; toast("This resets the demo for everyone using this link. Tap Reset demo data again to confirm."); setTimeout(() => { ui.resetArmed = false; }, 6000); return; }
     S = seed(); ui = { thread:null, mf:"all", role:"client", page:"home", pid:null, shot:{}, modal:null, signedIn:"v1", vVisit:null, rVisit:null, f:{role:"all", exp:0, county:"any", sort:"exp"} }; commit("Demo data reset."); window.scrollTo(0, 0); }
