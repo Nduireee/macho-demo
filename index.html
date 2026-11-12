@@ -518,6 +518,11 @@ body.no-bar .foot{display:none}
 .ptable td{padding:10px;border-bottom:1.5px solid var(--line-soft);vertical-align:middle;font-variant-numeric:tabular-nums}
 .ptable td.warn{color:var(--bad);font-weight:700}
 
+.ccwrap{display:flex;align-items:stretch;border:2px solid var(--line);border-radius:6px;background:var(--surface);overflow:hidden}
+.ccwrap:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.ccpre{display:grid;place-items:center;padding:0 12px;background:var(--bg);font-weight:700;border-right:2px solid var(--line);font-variant-numeric:tabular-nums}
+.ccwrap input{border:0 !important;border-radius:0 !important;flex:1;min-width:0;outline:none}
+
 .linkbox{min-width:min(520px,62vw)}
 .sync{font-weight:700;padding:2px 10px;border-radius:12px;background:rgba(255,255,255,.12)}
 .sync.live{background:#1C7343;color:#fff}
@@ -547,7 +552,8 @@ body.no-bar .foot{display:none}
      their own side. Demo links (with ?demo=1 or ?room=...) always show the bar.
    realSignIn: true sends real SMS codes through Supabase. Only turn this on
      after setting up Phone sign-in and an SMS provider in Supabase.
-   staffPhones: numbers allowed into the review desk, with country code.
+   ownerPhones: the owner’s numbers. Only these can sign in as client, professional and review desk.
+   staffPhones: other numbers allowed into the review desk, with country code.
    ====================================================================== */
 window.MACHO_CONFIG = {
   supabaseUrl: "https://raooitwtvgpdvqdmzpiv.supabase.co",
@@ -555,7 +561,8 @@ window.MACHO_CONFIG = {
   room: "demo",
   demoMode: false,
   realSignIn: false,
-  staffPhones: ["+254700000123", "+254702384722"]
+  ownerPhones: ["+254702384722"],
+  staffPhones: ["+254700000123"]
 };
 </script>
 <script>
@@ -1385,7 +1392,7 @@ const latestShot = p => { let k = 0; shots(p).forEach((s, i) => { if(s.state !==
 
 /* ---------- Header ---------- */
 function renderChrome(){
-  const signOutBtn = SESSION ? `<button class="btn ghost small-btn" data-act="signOut">Sign out</button>` : "";
+  const signOutBtn = SESSION ? `${SESSION.owner ? `<button class="btn ghost small-btn" data-act="toSignIn">Switch account</button>` : ""}<button class="btn ghost small-btn" data-act="signOut">Sign out</button>` : "";
   const label = needSignIn() ? (DEMO ? `<button class="btn ghost small-btn" data-act="cancelSignIn">Skip sign-in</button>` : "")
     : ui.role === "presenter" ? `<span class="who-chip"><span class="avatar">${ic("stages",20)}</span><span class="who-name">Demo controls</span></span>`
     : ui.role === "client" ? `<nav class="client-nav" aria-label="Main"><button class="btn ${["home","project"].includes(ui.page) ? "" : "ghost"} small-btn" data-act="home" aria-label="My projects">${ic("home",20)} <span class="tr-label">${L("My projects")}</span></button>
@@ -1418,6 +1425,23 @@ function fullPhone(cc, typed){
   return "+" + c + d.replace(/^0+/, "");
 }
 const samePhone = (a, b) => String(a).replace(/\D/g, "") === String(b).replace(/\D/g, "");
+/* One number, one kind of account. Only the owner’s numbers may use all three.
+   Professionals only after the review desk has checked their registration; the review desk only for staff numbers. */
+const OWNERS = () => CFG.ownerPhones || [];
+const isOwner = ph => OWNERS().some(x => samePhone(x, ph));
+const accounts = () => S.accounts || (S.accounts = {});
+const apps = () => S.applications || (S.applications = []);
+const ROLE_NAME = { client:"a client", verifier:"a professional", review:"review desk staff" };
+function roleOfPhone(ph){
+  const k = String(ph).replace(/\D/g, "");
+  if(accounts()[k]) return accounts()[k].role;
+  if((CFG.staffPhones || []).some(x => samePhone(x, ph))) return "review";
+  if(Object.values(VERIFIERS).some(x => samePhone(x.phone, ph))) return "verifier";
+  if(samePhone(DEMO_PHONES.client, ph)) return "client";
+  return null;
+}
+function mergePros(){ Object.entries(S.extraPros || {}).forEach(([id, x]) => { VERIFIERS[id] = x; x.services = ROLE_INFO[x.role].for.split(","); }); }
+const rt = x => x.reviews ? x.rating.toFixed(1) : "New";
 function needSignIn(){ return ui.forceSignIn || (!DEMO && !SESSION); }
 function viewSignIn(){
   const si = ui.si || (ui.si = ui.siWanted ? { step:2, role:ui.siWanted, cc:ui.siWanted === "client" ? "+1" : "+254", phone:"" } : { step:1, role:null, cc:"+1", phone:"" });
@@ -1430,7 +1454,8 @@ function viewSignIn(){
     const r = ROLE_PICK[si.role];
     body = `${back}<h1 class="hello" style="font-size:2.2rem">Your phone number</h1><p class="hello-sub">${r.t}. We’ll send a 6-digit code by text message.</p>
       <div class="phone-row"><label class="field" style="flex:0 0 200px">Country<select data-field="siCc">${CODES.map(([c, n]) => `<option value="${c}" ${si.cc === c ? "selected" : ""}>${n} (${c})</option>`).join("")}</select></label>
-        <label class="field" style="flex:1">Phone number<input type="tel" inputmode="tel" id="si-phone" value="${esc(si.phone)}" placeholder="Your number without the first 0" autocomplete="tel"></label></div>
+        <label class="field" style="flex:1">Phone number<span class="ccwrap"><span class="ccpre" aria-hidden="true">${si.cc}</span><input type="tel" inputmode="numeric" id="si-phone" data-field="siPhone" value="${esc(si.phone)}" placeholder="${si.cc === "+254" ? "702 384 722" : "Rest of your number"}" autocomplete="tel-national" aria-label="Phone number after ${si.cc}"></span></label></div>
+      <p class="tiny muted">Type the number after ${si.cc}, without the first 0.</p>
       ${DEMO ? `<p class="small muted">Demo: <button class="linkish" data-act="siSample">use the sample number</button>.</p>` : ""}
       <p id="si-err" class="note" role="alert"></p>
       <div class="btn-row"><button class="btn sign wide" data-act="siSend">${ic("send",20)} Send me a code</button></div>`;
@@ -1441,9 +1466,26 @@ function viewSignIn(){
       <p id="si-err" class="note" role="alert"></p>
       <div class="btn-row"><button class="btn sign wide" data-act="siVerify">${ic("check",20)} Sign in</button></div>
       <p class="small" style="margin-top:12px">No code? <button class="linkish" data-act="siSend">Send it again</button></p>`;
+  } else if(si.step === 5){
+    body = `${back}<h1 class="hello" style="font-size:2.2rem">Apply to join as a professional</h1>
+      <p class="hello-sub">${esc(fullPhone(si.cc, si.phone))} isn’t on our list of checked professionals yet. Tell us who you are. Our review desk checks your registration with your professional board and your ID before you can take any job.</p>
+      <div class="fields" style="grid-template-columns:1fr">
+        <label class="field">Full name, as on your ID<input type="text" id="ap-name"></label>
+        <label class="field">Your profession<select id="ap-role">${ROLES.map(r => `<option>${r}</option>`).join("")}</select></label>
+        <label class="field">Registration or licence number<input type="text" id="ap-reg" placeholder="For example, BORAQS QS 1234"></label>
+        <label class="field">National ID number<input type="text" id="ap-id" inputmode="numeric"></label>
+        <label class="field">Counties you work in<input type="text" id="ap-counties" placeholder="For example, Nairobi, Kiambu"></label></div>
+      <label class="opt" style="margin-top:12px"><input type="checkbox" id="ap-coi"><span>I am not a contractor, developer or seller, and I will declare any link to a party in a job before accepting it.</span></label>
+      <p id="si-err" class="note" role="alert"></p>
+      <div class="btn-row"><button class="btn sign wide" data-act="apSend">Send my application</button></div>`;
+  } else if(si.step === 6){
+    const a = apps().filter(x => samePhone(x.phone, fullPhone(si.cc, si.phone))).slice(-1)[0];
+    body = `<h1 class="hello" style="font-size:2.2rem">${a && a.status === "rejected" ? "Application not approved" : "Application received"}</h1>
+      <p class="hello-sub">${a && a.status === "rejected" ? `Reason: ${esc(a.note || "not given")}. You can contact the help desk to ask about it.` : "We’re checking your registration with your board and your ID. This usually takes 1 to 2 working days. We’ll send you a text message when you can sign in."}</p>
+      <div class="btn-row"><button class="btn ghost" data-act="siRestart">Back to sign-in</button></div>`;
   } else if(si.step === 4){
     body = `${back}<h1 class="hello" style="font-size:2.2rem">Which professional are you?</h1>
-      <p class="hello-sub">${DEMO ? "Demo: pick a sample profile to sign in as." : "Your number isn’t linked to a profile yet. In the live app, the review desk checks your registration with your board before you can take jobs."}</p>
+      <p class="hello-sub">Owner access: pick which professional to sign in as.</p>
       <div class="sipick">${Object.entries(VERIFIERS).map(([id, x]) => `<button class="whatbtn" data-act="siPro" data-v="${id}">${avatar(id, 48)}<span><strong style="font-size:1.2rem">${x.name}</strong><span class="small muted">${x.role}</span></span></button>`).join("")}</div>`;
   }
   return `<div class="signin">${body}
@@ -1566,7 +1608,7 @@ function viewPeople(){
       <div class="person-top">${avatar(id, 56)}<div><h2>${x.name}</h2><p class="muted">${x.role}</p></div></div>
       <p class="small svc">${x.services.map(k => `<span class="tagsvc">${{build:"Building",land:"Land",home:"Houses and flats"}[k]}</span>`).join("")}</p>
       <p class="small regline">${ic("shield",18)} ${x.reg} <span class="pill pass">Checked</span></p>
-      <div class="pstats"><div><strong>${x.years}</strong><span>years’ experience</span></div><div><strong>${x.visits}</strong><span>Macho visits</span></div><div><strong>${x.rating.toFixed(1)}</strong><span>rating, ${x.reviews} reviews</span></div></div>
+      <div class="pstats"><div><strong>${x.years}</strong><span>years’ experience</span></div><div><strong>${x.visits}</strong><span>Macho visits</span></div><div><strong>${rt(x)}</strong><span>rating, ${x.reviews} reviews</span></div></div>
       <p class="small">${ic("pin",18)} ${x.counties.join(", ")}</p>
       <p class="small">${ic("calendar",18)} Next free ${x.next}. ${x.turnaround}.</p>
       <p class="small"><strong>${money(x.fee)}</strong> per site visit, ${money(x.video)} per video check-in</p>
@@ -2020,7 +2062,7 @@ function proEarningsHTML(){
     <div class="estats" style="margin-top:10px">
       <div class="stat"><strong>${st.firstPct == null ? "–" : st.firstPct + "%"}</strong><span>reports approved first time</span></div>
       <div class="stat"><strong>${st.qual == null ? "–" : st.qual + " / 4"}</strong><span>average review rating</span></div>
-      <div class="stat"><strong>${me.rating.toFixed(1)}</strong><span>client rating, ${me.reviews} reviews</span></div></div>
+      <div class="stat"><strong>${rt(me)}</strong><span>client rating, ${me.reviews} reviews</span></div></div>
     <div class="callout small">${ic("wallet",22)}<p>You receive ${Math.round(PRO_SHARE * 100)}% of each fee. Fees are paid every ${PAY_DAY} by M-Pesa to your number ending ${me.phone.replace(/\D/g, "").slice(-3)}, for every report approved by then.</p></div>
     ${pending.length ? `<h2 class="sub-h">Not yet approved</h2><div class="block"><ul class="rows">${pending.map(v => `<li><div class="r-main"><div><div class="r-title">${mById(v.milestoneId).name}, ${esc(pById(v.projectId).town)}</div><div class="small muted">${v.status === "returned" ? "Sent back: fix it to get paid" : "With the review desk"}</div></div></div><strong>${money(netOf(v))}</strong></li>`).join("")}</ul></div>` : ""}
     <h2 class="sub-h">Payments</h2>
@@ -2167,7 +2209,17 @@ function viewReview(){
           <td>${st.qual == null ? "–" : st.qual + " / 4"}</td><td>${st.waiting ? money(st.waiting) : "–"}</td></tr>`; }).join("")}</tbody></table></div>
       <p class="tiny muted" style="margin-top:8px">First-time approval below 80% is highlighted: a sign the professional may need coaching.</p>`;
   }
-  const tabs = [["todo","To review",todo.length],["back","Sent back",back.length],["done","Approved",appr.length],["cases","Disputes",openCases.length],["pay","Fees to pay",owed.length],["pros","Professionals",0]];
+  if(T === "join"){
+    const list2 = apps().slice().reverse();
+    list = list2.length ? `<ul class="rows">${list2.map(a => `<li style="display:block"><div class="r-main"><span class="pav" style="background:#5B3F8C">${initials(a.name)}</span><div style="flex:1">
+        <div class="r-title">${esc(a.name)} <span class="pill ${a.status === "pending" ? "wait" : a.status === "approved" ? "pass" : "issue"}">${a.status === "pending" ? "Waiting" : a.status === "approved" ? "Approved" : "Not approved"}</span></div>
+        <div class="small muted">${esc(a.role)}, ${esc(a.reg)}. ID ${esc(a.idNo)}. ${esc(a.phone)}. Works in ${esc(a.counties || "not given")}. Applied ${esc(a.at)}.</div>
+        ${a.status === "pending" ? `<ul class="checks small" style="margin-top:8px">${["Registration number found on the board’s public register","Name on the register matches the national ID","ID photo matches a live selfie","M-Pesa number is registered in the same name","Not listed as a contractor, developer or estate seller"].map(c => `<li><span class="tick" style="background:var(--line)">${ic("check",14)}</span><span>${c}</span></li>`).join("")}</ul>
+          <div class="btn-row" style="margin-top:6px"><button class="btn sign small-btn" data-act="apApprove" data-id="${a.id}">${ic("check",18)} Approve</button><button class="btn danger small-btn" data-act="apReject" data-id="${a.id}">Don’t approve</button></div>
+          ${ui.rejecting === a.id ? `<p class="small" style="margin-top:8px"><strong>Why not?</strong> The applicant sees this.</p><div class="chips pick">${["Registration not found on the board’s register","Name doesn’t match the ID","Linked to a contractor, developer or seller","Details incomplete"].map(r => `<button data-act="apRejectWhy" data-id="${a.id}" data-v="${r}">${r}</button>`).join("")}</div>` : ""}` : a.note ? `<p class="small">Reason: ${esc(a.note)}</p>` : ""}</div></div></li>`).join("")}</ul>`
+      : `<p class="empty-msg">No applications. People who sign in as a professional with a new number apply here, and can’t take jobs until approved.</p>`;
+  }
+  const tabs = [["todo","To review",todo.length],["back","Sent back",back.length],["done","Approved",appr.length],["cases","Disputes",openCases.length],["pay","Fees to pay",owed.length],["pros","Professionals",0],["join","Join requests",apps().filter(a => a.status === "pending").length]];
   return `<h1 class="hello">Review desk</h1>
     <p class="hello-sub">A second person checks every report before the client sees it.</p>
     <div class="kpis">
@@ -2177,6 +2229,7 @@ function viewReview(){
       ${kpi(appr.length ? Math.round(100 * firstOK / appr.length) + "%" : "–", "approved first time", "pros", "")}
       ${kpi(openCases.length, "open client disputes", "cases", openCases.length ? "hot" : "")}
       ${kpi(money(owed.reduce((a, x) => a + netOf(x), 0)), "professionals’ fees to pay", "pay", "")}
+      ${kpi(apps().filter(a => a.status === "pending").length, "professionals waiting to join", "join", apps().some(a => a.status === "pending") ? "hot" : "")}
     </div>
     <div class="chips pick" style="margin-top:22px" role="tablist">${tabs.map(([k, t, n]) => `<button data-act="rtab" data-v="${k}" aria-pressed="${T === k}">${t}${n ? ` (${n})` : ""}</button>`).join("")}</div>
     <section class="card" style="margin-top:14px">${list}</section>`;
@@ -2258,7 +2311,7 @@ function renderModal(){
     html = `<div class="person-top" style="padding-right:48px">${avatar(M.sid, 72)}<div><h2 style="font-size:2rem">${x.name}</h2><p class="muted">${x.role}, ${x.years} years’ experience</p></div></div>
       <p style="margin-top:14px">${x.bio}</p>
       <div class="roleinfo" style="margin-top:12px"><strong>What a ${x.role.toLowerCase()} does on Macho</strong><p class="small">${ROLE_INFO[x.role].does}</p><p class="small muted">${ROLE_INFO[x.role].never}</p></div>
-      <div class="pstats" style="margin-top:14px"><div><strong>${x.years}</strong><span>years’ experience</span></div><div><strong>${x.visits}</strong><span>Macho visits</span></div><div><strong>${x.rating.toFixed(1)}</strong><span>rating, ${x.reviews} reviews</span></div></div>
+      <div class="pstats" style="margin-top:14px"><div><strong>${x.years}</strong><span>years’ experience</span></div><div><strong>${x.visits}</strong><span>Macho visits</span></div><div><strong>${rt(x)}</strong><span>rating, ${x.reviews} reviews</span></div></div>
       <h3 class="modal-sub">What Macho has checked</h3>
       <ul class="checks"><li><span class="tick">${ic("check",16)}</span><span>${x.reg}, confirmed with the ${x.body}</span></li>${STD_CHECKS.map(c => `<li><span class="tick">${ic("check",16)}</span><span>${c}</span></li>`).join("")}</ul>
       <h3 class="modal-sub">Good at</h3><div class="chips">${x.skills.map(k => `<span class="chip-static">${k}</span>`).join("")}</div>
@@ -2406,6 +2459,7 @@ function renderModal(){
 
 /* ---------- Render ---------- */
 function render(){
+  mergePros();
   const signing = needSignIn();
   document.body.classList.toggle("is-client", ui.role === "client" && !signing);
   document.body.classList.toggle("no-bar", !DEMO || !!LOCALSET.hideBar);
@@ -2455,7 +2509,15 @@ const actions = {
     if(inp) si.phone = inp.value.trim();
     const full = fullPhone(si.cc, si.phone), digits = full.replace(/\D/g, "").slice(si.cc.replace(/\D/g, "").length);
     if(digits.length < 7 || digits.length > 12){ if(err) err.textContent = "Please check the number. Leave out the first 0."; return; }
-    if(si.role === "review" && !DEMO && !(CFG.staffPhones || []).some(x => samePhone(x, full))){ if(err) err.textContent = "This number isn’t on the review desk staff list."; return; }
+    if(!isOwner(full)){
+      const has = roleOfPhone(full);
+      if(has && has !== si.role){ if(err) err.innerHTML = `This number is registered as ${ROLE_NAME[has]}. Each number can only be used for one kind of account. <button class="linkish" data-act="siSwitch" data-v="${has}">Sign in as ${ROLE_NAME[has]} instead</button>`; return; }
+      if(si.role === "review" && has !== "review"){ if(err) err.textContent = "This number isn’t on the review desk staff list. Only Macho staff can use the review desk."; return; }
+      if(si.role === "verifier" && has !== "verifier"){
+        const a = apps().filter(x => samePhone(x.phone, full)).slice(-1)[0];
+        if(a && a.status !== "approved"){ si.step = 6; render(); return; }
+        si.step = 5; render(); return; }
+    }
     if(REAL_AUTH()){ const { error } = await SYNC.db.auth.signInWithOtp({ phone:full }); if(error){ if(err) err.textContent = "We couldn’t send a code. Please try again in a minute."; return; } si.demoCode = null; }
     else si.demoCode = String(Math.floor(100000 + Math.random() * 900000));
     si.step = 3; render(); setTimeout(() => { const c = document.getElementById("si-code"); if(c) c.focus(); }, 0); },
@@ -2464,9 +2526,21 @@ const actions = {
     if(REAL_AUTH()){ const { error } = await SYNC.db.auth.verifyOtp({ phone:fullPhone(si.cc, si.phone), token:code.trim(), type:"sms" });
       if(error){ if(err) err.textContent = "That code didn’t work. Check it, or send a new one."; return; } }
     else if(code.trim() !== si.demoCode){ if(err) err.textContent = "That code didn’t match. Check the demo text message above."; return; }
-    if(si.role === "verifier"){ const full = fullPhone(si.cc, si.phone), match = Object.keys(VERIFIERS).find(id => samePhone(VERIFIERS[id].phone, full));
-      if(match) return signInAs("verifier", { sid:match }); si.step = 4; render(); return; }
-    signInAs(si.role); },
+    const full = fullPhone(si.cc, si.phone), owner = isOwner(full);
+    if(si.role === "verifier"){
+      if(owner){ si.step = 4; render(); return; }
+      const match = Object.keys(VERIFIERS).find(id => samePhone(VERIFIERS[id].phone, full));
+      if(match) return signInAs("verifier", { sid:match }); si.step = 5; render(); return; }
+    if(!owner && !roleOfPhone(full)){ accounts()[full.replace(/\D/g, "")] = { role:si.role, since:today() }; save(); }
+    signInAs(si.role, owner ? { owner:true } : {}); },
+  siSwitch(d){ ui.si.role = d.v; ui.si.step = 2; render(); },
+  siRestart(){ ui.si = { step:1, role:null, cc:"+1", phone:"" }; render(); },
+  apSend(){ const g = id => (document.getElementById(id) || {}).value || "", err = document.getElementById("si-err"), si = ui.si;
+    const name = g("ap-name").trim(), reg = g("ap-reg").trim(), idNo = g("ap-id").trim();
+    if(!name || !reg || !idNo){ err.textContent = "Please fill in your name, registration number and ID number."; return; }
+    if(!document.getElementById("ap-coi").checked){ err.textContent = "Please confirm the statement about contractors and sellers."; return; }
+    apps().push({ id:"app-" + (S.nextId++), phone:fullPhone(si.cc, si.phone), name, role:g("ap-role"), reg, idNo, counties:g("ap-counties").trim(), at:now(), status:"pending" });
+    si.step = 6; commit("Application sent to the review desk."); },
   siPro(d){ signInAs("verifier", { sid:d.v }); },
   signOut(){ signOut(); setHash(); },
   toSignIn(){ ui.forceSignIn = true; ui.si = null; ui.modal = null; render(); setHash(); window.scrollTo(0, 0); },
@@ -2602,6 +2676,15 @@ const actions = {
   retake(d){ const v = vById(d.vid); delete v.photos[d.spot]; save(); keepScroll(render); },
   submit(d){ const v = vById(d.vid); if(missing(v).length) return; v.status = "submitted"; v.submittedAt = now(); ui.vVisit = null;
     post(v.requestId ? reqThread({id:v.requestId}) : "updates", "system", `${VERIFIERS[v.verifierId].name} finished the visit. The report is with our review desk.`); commit("Sent to the review desk."); window.scrollTo(0, 0); },
+  apApprove(d){ const a = apps().find(x => x.id === d.id); a.status = "approved"; a.decidedAt = now();
+    const id = "vx" + (S.nextId++), fee = { "Advocate":12000, "Licensed land surveyor":15000, "Registered valuer":13000, "Structural engineer":12000, "Civil engineer":9000 }[a.role] || 7500;
+    (S.extraPros || (S.extraPros = {}))[id] = { name:a.name, role:a.role, reg:a.reg, body:"Checked by Macho", years:1, visits:0, rating:0, reviews:0, fee, video:Math.round(fee / 3 / 500) * 500,
+      counties:(a.counties || "Nairobi").split(",").map(x => x.trim()).filter(Boolean), langs:["English","Kiswahili"], next:"This week", reply:"New on Macho", turnaround:"Report in 1 day",
+      skills:[], bio:"New to Macho. Registration and ID checked by the review desk.", said:[], phone:a.phone };
+    accounts()[a.phone.replace(/\D/g, "")] = { role:"verifier", since:today() }; mergePros();
+    commit(`${a.name} approved. They can now sign in and take jobs.`); },
+  apReject(d){ ui.rejecting = ui.rejecting === d.id ? null : d.id; keepScroll(render); },
+  apRejectWhy(d){ const a = apps().find(x => x.id === d.id); a.status = "rejected"; a.note = d.v; a.decidedAt = now(); ui.rejecting = null; commit("Application not approved."); },
   rtab(d){ ui.rtab = d.v; ui.rVisit = null; render(); },
   closeReview(){ ui.rVisit = null; render(); window.scrollTo(0, 0); },
   openReview(d){ ui.rVisit = d.vid; render(); },
@@ -2629,7 +2712,10 @@ const actions = {
 };
 document.addEventListener("click", e => { const el = e.target.closest("[data-act]"); if(!el) return; const fn = actions[el.dataset.act]; if(fn) fn(el.dataset, el, e); });
 document.addEventListener("input", e => {
-  const t = e.target, f = t.dataset.field; if(!f) return; const v = t.dataset.vid ? vById(t.dataset.vid) : null;
+  const t = e.target, f = t.dataset.field; if(!f) return;
+  if(f === "siPhone"){ const c = ui.si.cc.replace(/\D/g, ""); let v = t.value.replace(/[^\d ]/g, "");
+    if(v.replace(/\D/g, "").startsWith(c) && v.replace(/\D/g, "").length > c.length + 6) v = v.replace(/\D/g, "").slice(c.length);
+    if(v !== t.value) t.value = v; ui.si.phone = v; return; } const v = t.dataset.vid ? vById(t.dataset.vid) : null;
   if(f === "other"){ v.other[t.dataset.item] = t.value; save(); refreshMissing(v); }
   else if(f === "progress"){ v.progress = +t.value; const o = document.getElementById("progOut"); if(o) o.textContent = t.value + "%"; save(); }
   else if(f === "summary"){ v.summary = t.value; save(); }
@@ -2654,7 +2740,7 @@ document.addEventListener("change", async e => {
   else if(f === "fixItem"){ const l = ui.modal.items, i = l.indexOf(t.value); if(t.checked && i < 0) l.push(t.value); if(!t.checked && i >= 0) l.splice(i, 1); renderModal(); }
   else if(f === "fixDue"){ ui.modal.due = +t.value; renderModal(); }
   else if(f === "setBar"){ LOCALSET.hideBar = !t.checked; try{ localStorage.setItem("macho-settings", JSON.stringify(LOCALSET)); }catch(e){} render(); }
-  else if(f === "siCc"){ ui.si.cc = t.value; }
+  else if(f === "siCc"){ const p = document.getElementById("si-phone"); if(p) ui.si.phone = p.value; ui.si.cc = t.value; render(); }
   else if(f.startsWith("set_")){ SET()[f.slice(4)] = t.checked; save(); renderChrome(); }
   else if(f === "npType"){ const keep = {}; ["np-name","np-town","np-county","np-contractor","np-budget"].forEach(id => { const e = document.getElementById(id); if(e) keep[id] = e.value; });
     ui.modal.type = t.value; renderModal(); Object.entries(keep).forEach(([id, v]) => { const e = document.getElementById(id); if(e) e.value = v; }); }
