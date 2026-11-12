@@ -555,7 +555,7 @@ window.MACHO_CONFIG = {
   room: "demo",
   demoMode: false,
   realSignIn: false,
-  staffPhones: ["+254700000123"]
+  staffPhones: ["+254700000123", "+254702384722"]
 };
 </script>
 <script>
@@ -1410,6 +1410,14 @@ const ROLE_PICK = { client:{ t:"I’m building or buying from abroad", d:"See yo
   verifier:{ t:"I’m a professional", d:"Surveyors, engineers, advocates, valuers and buyer’s agents", icon:"hardhat" },
   review:{ t:"I work on the Macho review desk", d:"Staff only", icon:"shield" } };
 const REAL_AUTH = () => !!(CFG.realSignIn && SYNC.db);
+/* Accepts 0702 384 722, 702384722, 254702384722 or +254 702 384 722: all become +254702384722 */
+function fullPhone(cc, typed){
+  const raw = String(typed || "").trim(), d = raw.replace(/\D/g, ""), c = cc.replace(/\D/g, "");
+  if(raw.startsWith("+") || raw.startsWith("00")) return "+" + d.replace(/^00/, "");
+  if(d.startsWith(c) && d.length - c.length >= 7) return "+" + d;
+  return "+" + c + d.replace(/^0+/, "");
+}
+const samePhone = (a, b) => String(a).replace(/\D/g, "") === String(b).replace(/\D/g, "");
 function needSignIn(){ return ui.forceSignIn || (!DEMO && !SESSION); }
 function viewSignIn(){
   const si = ui.si || (ui.si = ui.siWanted ? { step:2, role:ui.siWanted, cc:ui.siWanted === "client" ? "+1" : "+254", phone:"" } : { step:1, role:null, cc:"+1", phone:"" });
@@ -1427,7 +1435,7 @@ function viewSignIn(){
       <p id="si-err" class="note" role="alert"></p>
       <div class="btn-row"><button class="btn sign wide" data-act="siSend">${ic("send",20)} Send me a code</button></div>`;
   } else if(si.step === 3){
-    body = `${back}<h1 class="hello" style="font-size:2.2rem">Enter the code</h1><p class="hello-sub">We sent a 6-digit code to ${esc(si.cc + " " + si.phone)}.</p>
+    body = `${back}<h1 class="hello" style="font-size:2.2rem">Enter the code</h1><p class="hello-sub">We sent a 6-digit code to ${esc(fullPhone(si.cc, si.phone))}.</p>
       ${si.demoCode ? `<div class="callout">${ic("chat",22)}<p><strong>Demo text message:</strong> Your Macho code is <strong class="code">${si.demoCode}</strong>. In the live app this arrives by SMS.</p></div>` : ""}
       <label class="field">6-digit code<input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" id="si-code" class="codein" placeholder="••••••"></label>
       <p id="si-err" class="note" role="alert"></p>
@@ -1442,7 +1450,7 @@ function viewSignIn(){
     <p class="tiny muted" style="margin-top:20px">${ic("lock",14)} We never ask for a password, and never ask you to share this code with anyone, including Macho staff.</p></div>`;
 }
 function signInAs(role, extra){
-  SESSION = Object.assign({ role, phone:(ui.si ? ui.si.cc + " " + ui.si.phone : ""), at:now() }, extra || {}); saveSession();
+  SESSION = Object.assign({ role, phone:(ui.si ? fullPhone(ui.si.cc, ui.si.phone) : ""), at:now() }, extra || {}); saveSession();
   ui.forceSignIn = false; ui.si = null; ui.modal = null;
   ui.role = role; if(role === "verifier"){ ui.signedIn = SESSION.sid; ui.vTab = null; ui.vVisit = null; }
   if(role === "client"){ ui.page = "home"; }
@@ -2445,18 +2453,18 @@ const actions = {
     const cc = CODES.map(c => c[0]).sort((a, b) => b.length - a.length).find(c => n.startsWith(c)); si.cc = cc; si.phone = n.slice(cc.length).trim(); render(); },
   async siSend(){ const si = ui.si, inp = document.getElementById("si-phone"), err = document.getElementById("si-err");
     if(inp) si.phone = inp.value.trim();
-    const digits = si.phone.replace(/\D/g, "").replace(/^0/, "");
+    const full = fullPhone(si.cc, si.phone), digits = full.replace(/\D/g, "").slice(si.cc.replace(/\D/g, "").length);
     if(digits.length < 7 || digits.length > 12){ if(err) err.textContent = "Please check the number. Leave out the first 0."; return; }
-    if(si.role === "review" && !DEMO && !(CFG.staffPhones || []).map(x => x.replace(/\D/g, "")).includes((si.cc + digits).replace(/\D/g, ""))){ if(err) err.textContent = "This number isn’t on the review desk staff list."; return; }
-    if(REAL_AUTH()){ const { error } = await SYNC.db.auth.signInWithOtp({ phone:si.cc + digits }); if(error){ if(err) err.textContent = "We couldn’t send a code. Please try again in a minute."; return; } si.demoCode = null; }
+    if(si.role === "review" && !DEMO && !(CFG.staffPhones || []).some(x => samePhone(x, full))){ if(err) err.textContent = "This number isn’t on the review desk staff list."; return; }
+    if(REAL_AUTH()){ const { error } = await SYNC.db.auth.signInWithOtp({ phone:full }); if(error){ if(err) err.textContent = "We couldn’t send a code. Please try again in a minute."; return; } si.demoCode = null; }
     else si.demoCode = String(Math.floor(100000 + Math.random() * 900000));
     si.step = 3; render(); setTimeout(() => { const c = document.getElementById("si-code"); if(c) c.focus(); }, 0); },
   async siVerify(){ const si = ui.si, code = (document.getElementById("si-code") || {}).value || "", err = document.getElementById("si-err");
     if(!/^\d{6}$/.test(code.trim())){ if(err) err.textContent = "Enter the 6 digits from the text message."; return; }
-    if(REAL_AUTH()){ const { error } = await SYNC.db.auth.verifyOtp({ phone:si.cc + si.phone.replace(/\D/g, "").replace(/^0/, ""), token:code.trim(), type:"sms" });
+    if(REAL_AUTH()){ const { error } = await SYNC.db.auth.verifyOtp({ phone:fullPhone(si.cc, si.phone), token:code.trim(), type:"sms" });
       if(error){ if(err) err.textContent = "That code didn’t work. Check it, or send a new one."; return; } }
     else if(code.trim() !== si.demoCode){ if(err) err.textContent = "That code didn’t match. Check the demo text message above."; return; }
-    if(si.role === "verifier"){ const full = (si.cc + si.phone).replace(/\D/g, ""), match = Object.keys(VERIFIERS).find(id => VERIFIERS[id].phone.replace(/\D/g, "") === full);
+    if(si.role === "verifier"){ const full = fullPhone(si.cc, si.phone), match = Object.keys(VERIFIERS).find(id => samePhone(VERIFIERS[id].phone, full));
       if(match) return signInAs("verifier", { sid:match }); si.step = 4; render(); return; }
     signInAs(si.role); },
   siPro(d){ signInAs("verifier", { sid:d.v }); },
